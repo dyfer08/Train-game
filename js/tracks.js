@@ -2,8 +2,10 @@
  * Réseau style Mini Motorways — grille, voies blanches, eau, hubs colorés
  */
 const TrackFactory = (() => {
-  const MARGIN = 16;
-  const ROAD_WIDTH = 13;
+  const DENSITY = 5;
+  const MARGIN = 10;
+  const GRID_STEP = 18 / DENSITY;
+  const ROAD_WIDTH = 13 / DENSITY;
 
   const STATION_COLORS = {
     st_n: '#6366f1', st_ne: '#ec4899', st_e: '#f59e0b', st_se: '#ef4444',
@@ -85,15 +87,20 @@ const TrackFactory = (() => {
   ];
 
   const TERRAIN = [
-    { cx: 0.28, cy: 0.38, rx: 0.11, ry: 0.09, color: '#fce7f3' },
-    { cx: 0.74, cy: 0.62, rx: 0.13, ry: 0.10, color: '#fef9c3' },
-    { cx: 0.55, cy: 0.22, rx: 0.08, ry: 0.06, color: '#fef9c3' },
+    { cx: 0.22, cy: 0.32, rx: 0.07, ry: 0.06, color: '#fce7f3' },
+    { cx: 0.38, cy: 0.42, rx: 0.05, ry: 0.04, color: '#fce7f3' },
+    { cx: 0.74, cy: 0.58, rx: 0.08, ry: 0.06, color: '#fef9c3' },
+    { cx: 0.62, cy: 0.28, rx: 0.06, ry: 0.05, color: '#fef9c3' },
+    { cx: 0.48, cy: 0.68, rx: 0.05, ry: 0.04, color: '#fce7f3' },
+    { cx: 0.15, cy: 0.65, rx: 0.06, ry: 0.05, color: '#fef9c3' },
   ];
 
   const WATER = [
-    { cx: 0.38, cy: 0.54, rx: 0.14, ry: 0.07 },
-    { cx: 0.70, cy: 0.36, rx: 0.16, ry: 0.05 },
-    { cx: 0.62, cy: 0.72, rx: 0.10, ry: 0.06 },
+    { cx: 0.35, cy: 0.52, rx: 0.09, ry: 0.045 },
+    { cx: 0.52, cy: 0.58, rx: 0.06, ry: 0.035 },
+    { cx: 0.68, cy: 0.34, rx: 0.10, ry: 0.035 },
+    { cx: 0.58, cy: 0.74, rx: 0.07, ry: 0.04 },
+    { cx: 0.25, cy: 0.48, rx: 0.06, ry: 0.03 },
   ];
 
   function scalePoint(nx, ny, w, h) {
@@ -234,9 +241,9 @@ const TrackFactory = (() => {
     ctx.fillStyle = '#f4f4f5';
     ctx.fillRect(0, 0, w, h);
 
-    const step = 18 * dpr;
+    const step = GRID_STEP * dpr;
     ctx.strokeStyle = '#e4e4e7';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 0.8;
     for (let x = 0; x <= w; x += step) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
@@ -275,9 +282,9 @@ const TrackFactory = (() => {
     ctx.lineJoin = 'round';
 
     ctx.shadowColor = 'rgba(0, 0, 0, 0.14)';
-    ctx.shadowBlur = 5 * dpr;
-    ctx.shadowOffsetX = 2 * dpr;
-    ctx.shadowOffsetY = 3 * dpr;
+    ctx.shadowBlur = (5 / DENSITY) * dpr;
+    ctx.shadowOffsetX = (2 / DENSITY) * dpr;
+    ctx.shadowOffsetY = (3 / DENSITY) * dpr;
 
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = width;
@@ -290,8 +297,8 @@ const TrackFactory = (() => {
 
     if (isBridge) {
       ctx.strokeStyle = '#27272a';
-      ctx.lineWidth = 1.5 * dpr;
-      const offset = (width / 2 - 2 * dpr);
+      ctx.lineWidth = 0.8 * dpr;
+      const offset = (width / 2 - 0.8 * dpr);
       for (let i = 1; i < pts.length; i++) {
         const a = pts[i - 1];
         const b = pts[i];
@@ -313,43 +320,43 @@ const TrackFactory = (() => {
   }
 
   function drawHub(ctx, x, y, dpr) {
-    const size = 11 * dpr;
+    const size = (11 / DENSITY) * dpr;
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.12)';
-    ctx.shadowBlur = 4 * dpr;
-    ctx.shadowOffsetX = 2 * dpr;
-    ctx.shadowOffsetY = 2 * dpr;
+    ctx.shadowBlur = (4 / DENSITY) * dpr;
+    ctx.shadowOffsetX = (2 / DENSITY) * dpr;
+    ctx.shadowOffsetY = (2 / DENSITY) * dpr;
     ctx.fillStyle = '#fafafa';
     ctx.strokeStyle = '#d4d4d8';
-    ctx.lineWidth = 1.5 * dpr;
+    ctx.lineWidth = 0.8 * dpr;
     ctx.beginPath();
-    ctx.roundRect(x - size, y - size, size * 2, size * 2, 4 * dpr);
+    ctx.roundRect(x - size, y - size, size * 2, size * 2, (4 / DENSITY) * dpr);
     ctx.fill();
     ctx.stroke();
     ctx.restore();
 
     ctx.fillStyle = '#a1a1aa';
     ctx.beginPath();
-    ctx.arc(x, y, 3 * dpr, 0, Math.PI * 2);
+    ctx.arc(x, y, (3 / DENSITY) * dpr, 0, Math.PI * 2);
     ctx.fill();
   }
 
   function drawStation(ctx, st, dpr) {
-    const size = 9 * dpr;
+    const size = (9 / DENSITY) * dpr;
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.15)';
-    ctx.shadowBlur = 5 * dpr;
-    ctx.shadowOffsetX = 2 * dpr;
-    ctx.shadowOffsetY = 3 * dpr;
+    ctx.shadowBlur = (5 / DENSITY) * dpr;
+    ctx.shadowOffsetX = (2 / DENSITY) * dpr;
+    ctx.shadowOffsetY = (3 / DENSITY) * dpr;
     ctx.fillStyle = st.color;
     ctx.beginPath();
-    ctx.roundRect(st.x - size, st.y - size, size * 2, size * 2, 3 * dpr);
+    ctx.roundRect(st.x - size, st.y - size, size * 2, size * 2, (3 / DENSITY) * dpr);
     ctx.fill();
     ctx.restore();
 
     ctx.fillStyle = 'rgba(255,255,255,0.45)';
     ctx.beginPath();
-    ctx.roundRect(st.x - size * 0.45, st.y - size * 0.45, size * 0.9, size * 0.9, 2 * dpr);
+    ctx.roundRect(st.x - size * 0.45, st.y - size * 0.45, size * 0.9, size * 0.9, (2 / DENSITY) * dpr);
     ctx.fill();
   }
 
@@ -377,7 +384,7 @@ const TrackFactory = (() => {
       if (j.id !== 'hub') {
         ctx.fillStyle = '#d4d4d8';
         ctx.beginPath();
-        ctx.arc(j.x, j.y, 2.5 * dpr, 0, Math.PI * 2);
+        ctx.arc(j.x, j.y, (2.5 / DENSITY) * dpr, 0, Math.PI * 2);
         ctx.fill();
       }
     });

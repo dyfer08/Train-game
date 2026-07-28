@@ -143,9 +143,9 @@ const TrainFactory = (() => {
       ctx.rotate(angle);
 
       ctx.shadowColor = 'rgba(0, 0, 0, 0.18)';
-      ctx.shadowBlur = 4 * s;
-      ctx.shadowOffsetX = 2 * s;
-      ctx.shadowOffsetY = 2 * s;
+      ctx.shadowBlur = 2 * s;
+      ctx.shadowOffsetX = 0.8 * s;
+      ctx.shadowOffsetY = 0.8 * s;
 
       if (seg.type === 'loco') {
         drawLocomotive(ctx, config, -seg.length / 2, -carH / 2, seg.length, carH, s);
@@ -166,7 +166,7 @@ const TrainFactory = (() => {
       const centerDist = frontDist - seg.centerFromFront * direction;
       const wrapped = ((centerDist % total) + total) % total;
       const pos = getPointAtDistance(path, wrapped);
-      return { x: pos.x, y: pos.y, radius: Math.max(seg.length, 14 * scale) * 0.55 };
+      return { x: pos.x, y: pos.y, radius: Math.max(seg.length, 14 * scale) * 0.65 };
     });
   }
 
