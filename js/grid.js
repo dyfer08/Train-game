@@ -1,193 +1,92 @@
 /**
- * Grille et décor style Mini Motorways
+ * Rendu de la grille style KAZ
  */
-const Grid = (() => {
-  const COLS = 40;
-  const ROWS = 52;
-
-  const TERRAIN = [
-    { cx: 9, cy: 14, rx: 7, ry: 6, color: '#fdcfe0' },
-    { cx: 30, cy: 18, rx: 8, ry: 5, color: '#fdcfe0' },
-    { cx: 22, cy: 38, rx: 9, ry: 7, color: '#fdcfe0' },
-    { cx: 12, cy: 42, rx: 6, ry: 5, color: '#fef08a' },
-    { cx: 33, cy: 40, rx: 7, ry: 6, color: '#fef08a' },
-  ];
-
-  const WATER = [
-    { points: [[6, 22], [6, 26], [14, 26], [18, 30], [22, 30], [26, 34], [32, 34], [36, 38], [36, 42]] },
-    { points: [[28, 8], [32, 8], [34, 12], [34, 16], [30, 18]] },
-  ];
-
-  let cellSize = 10;
+const GridRenderer = (() => {
+  let cellSize = 40;
   let offsetX = 0;
   let offsetY = 0;
-  let mapW = 0;
-  let mapH = 0;
 
-  function layout(width, height) {
-    const pad = 8;
-    cellSize = Math.floor(Math.min((width - pad * 2) / COLS, (height - pad * 2) / ROWS));
-    mapW = cellSize * COLS;
-    mapH = cellSize * ROWS;
+  function layout(cols, rows, width, height) {
+    const pad = 16;
+    cellSize = Math.floor(Math.min((width - pad * 2) / cols, (height - pad * 2) / rows));
+    const mapW = cellSize * cols;
+    const mapH = cellSize * rows;
     offsetX = Math.floor((width - mapW) / 2);
     offsetY = Math.floor((height - mapH) / 2);
   }
 
-  function toPixel(col, row) {
+  function cellCenter(col, row) {
     return {
       x: offsetX + col * cellSize + cellSize / 2,
       y: offsetY + row * cellSize + cellSize / 2,
     };
   }
 
-  function drawStripedBorder(ctx, width, height) {
-    const stripe = 6;
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(offsetX, offsetY, mapW, mapH);
-    ctx.clip();
+  function draw(ctx, cols, rows, width, height) {
+    layout(cols, rows, width, height);
 
-    for (let i = -height; i < width + height; i += stripe * 2) {
-      ctx.fillStyle = '#e5e7eb';
-      ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i + height, height);
-      ctx.lineTo(i + height + stripe, height);
-      ctx.lineTo(i + stripe, 0);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.restore();
+    ctx.fillStyle = '#0f0f16';
+    ctx.fillRect(0, 0, width, height);
 
-    ctx.strokeStyle = '#d1d5db';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(offsetX + 0.5, offsetY + 0.5, mapW - 1, mapH - 1);
-  }
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const { x, y } = cellCenter(c, r);
+        const pulse = 0.04 * Math.sin((c + r) * 0.8);
 
-  function drawGrid(ctx) {
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(offsetX, offsetY, mapW, mapH);
+        ctx.fillStyle = `rgba(168, 85, 247, ${0.06 + pulse})`;
+        ctx.beginPath();
+        ctx.roundRect(
+          x - cellSize * 0.42,
+          y - cellSize * 0.42,
+          cellSize * 0.84,
+          cellSize * 0.84,
+          cellSize * 0.14
+        );
+        ctx.fill();
 
-    ctx.strokeStyle = '#ececec';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let c = 0; c <= COLS; c++) {
-      const x = offsetX + c * cellSize + 0.5;
-      ctx.moveTo(x, offsetY);
-      ctx.lineTo(x, offsetY + mapH);
-    }
-    for (let r = 0; r <= ROWS; r++) {
-      const y = offsetY + r * cellSize + 0.5;
-      ctx.moveTo(offsetX, y);
-      ctx.lineTo(offsetX + mapW, y);
-    }
-    ctx.stroke();
-  }
-
-  function drawTerrain(ctx) {
-    TERRAIN.forEach((zone) => {
-      const p = toPixel(zone.cx, zone.cy);
-      ctx.fillStyle = zone.color;
-      ctx.beginPath();
-      ctx.ellipse(
-        p.x, p.y,
-        zone.rx * cellSize * 0.55,
-        zone.ry * cellSize * 0.55,
-        0, 0, Math.PI * 2
-      );
-      ctx.fill();
-    });
-  }
-
-  function drawWaterPath(ctx, points, width) {
-    if (points.length < 2) return;
-
-    const pixels = points.map(([c, r]) => toPixel(c, r));
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = '#98ded9';
-    ctx.lineWidth = width;
-    ctx.beginPath();
-    ctx.moveTo(pixels[0].x, pixels[0].y);
-    for (let i = 1; i < pixels.length; i++) ctx.lineTo(pixels[i].x, pixels[i].y);
-    ctx.stroke();
-  }
-
-  function drawWater(ctx) {
-    drawWaterPath(ctx, WATER[0].points, cellSize * 2.2);
-    drawWaterPath(ctx, WATER[1].points, cellSize * 1.8);
-  }
-
-  function isOverWater(x, y) {
-    return WATER.some((river) => {
-      const pixels = river.points.map(([c, r]) => toPixel(c, r));
-      for (let i = 1; i < pixels.length; i++) {
-        const dist = pointToSegmentDistance(x, y, pixels[i - 1], pixels[i]);
-        if (dist < cellSize * 1.3) return true;
+        ctx.strokeStyle = 'rgba(113, 113, 122, 0.35)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
       }
-      return false;
-    });
+    }
   }
 
-  function pointToSegmentDistance(px, py, a, b) {
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const len2 = dx * dx + dy * dy;
-    if (len2 === 0) return Math.hypot(px - a.x, py - a.y);
-    let t = ((px - a.x) * dx + (py - a.y) * dy) / len2;
-    t = Math.max(0, Math.min(1, t));
-    return Math.hypot(px - (a.x + t * dx), py - (a.y + t * dy));
-  }
-
-  function drawStation(ctx, col, row, color, sizeCells = 1.4) {
-    const p = toPixel(col, row);
-    const size = cellSize * sizeCells * 0.42;
+  function drawCard(ctx, col, row, color, isPlayer = false) {
+    const { x, y } = cellCenter(col, row);
+    const size = cellSize * (isPlayer ? 0.38 : 0.32);
 
     ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.12)';
-    ctx.shadowBlur = cellSize * 0.35;
-    ctx.shadowOffsetX = cellSize * 0.12;
-    ctx.shadowOffsetY = cellSize * 0.15;
+    if (isPlayer) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = cellSize * 0.5;
+    }
+
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.roundRect(p.x - size, p.y - size, size * 2, size * 2, cellSize * 0.18);
+    ctx.roundRect(x - size, y - size, size * 2, size * 2, cellSize * 0.1);
     ctx.fill();
+
+    ctx.shadowColor = 'transparent';
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fillRect(x - size * 0.35, y - size * 0.35, size * 0.7, size * 0.7);
+
+    if (isPlayer) {
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
     ctx.restore();
-
-    ctx.fillStyle = 'rgba(255,255,255,0.35)';
-    ctx.beginPath();
-    ctx.roundRect(p.x - size * 0.4, p.y - size * 0.4, size * 0.8, size * 0.8, cellSize * 0.1);
-    ctx.fill();
   }
 
-  function drawHouseCluster(ctx, cells, color) {
-    cells.forEach(([c, r]) => {
-      const p = toPixel(c, r);
-      const s = cellSize * 0.28;
-      ctx.fillStyle = color;
-      ctx.fillRect(p.x - s, p.y - s, s * 2, s * 2);
-    });
-  }
-
-  function drawBackground(ctx, width, height) {
-    ctx.clearRect(0, 0, width, height);
-    drawStripedBorder(ctx, width, height);
-    drawGrid(ctx);
-    drawTerrain(ctx);
-    drawWater(ctx);
+  function drawEnemy(ctx, col, row, color) {
+    drawCard(ctx, col, row, color, false);
   }
 
   return {
-    COLS,
-    ROWS,
-    layout,
-    toPixel,
-    isOverWater,
-    drawBackground,
-    drawStation,
-    drawHouseCluster,
+    draw,
+    drawCard,
+    drawEnemy,
     get cellSize() { return cellSize; },
-    get offsetX() { return offsetX; },
-    get offsetY() { return offsetY; },
   };
 })();

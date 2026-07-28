@@ -4,33 +4,44 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Train Grid</title>
+  <title>KAZ Grid</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div id="game">
-    <header class="hud-top">
-      <p class="hud-label">Défi du jour</p>
-      <div class="hud-icons">
-        <span class="hud-badge">1</span>
-        <span class="hud-pin" aria-hidden="true">◎</span>
+    <header class="hud">
+      <div class="hud-block">
+        <span class="hud-label">Score</span>
+        <span id="score" class="hud-value">0</span>
+      </div>
+      <div class="hud-block hud-center">
+        <span class="hud-label">Objectif</span>
+        <span id="target" class="hud-value">10</span>
+      </div>
+      <div class="hud-block hud-right">
+        <span class="hud-label">Temps</span>
+        <span id="timer" class="hud-value">15</span>
       </div>
     </header>
 
     <main class="stage">
-      <canvas id="canvas" aria-label="Carte ferroviaire"></canvas>
+      <canvas id="canvas" aria-label="Grille de jeu"></canvas>
+      <div id="overlay" class="overlay hidden">
+        <p id="overlay-title" class="overlay-title"></p>
+        <p id="overlay-sub" class="overlay-sub"></p>
+        <button id="btn-restart" class="btn">Rejouer</button>
+      </div>
     </main>
 
-    <footer class="hud-bottom">
-      <h1 class="city-name">Paris</h1>
-      <div class="city-line"></div>
-      <p class="city-score" id="score">0</p>
-    </footer>
+    <nav class="controls" aria-label="Déplacements">
+      <button class="pad pad-up" data-dir="up" aria-label="Haut">▲</button>
+      <button class="pad pad-left" data-dir="left" aria-label="Gauche">◀</button>
+      <button class="pad pad-down" data-dir="down" aria-label="Bas">▼</button>
+      <button class="pad pad-right" data-dir="right" aria-label="Droite">▶</button>
+    </nav>
   </div>
 
   <script src="js/grid.js"></script>
-  <script src="js/rails.js"></script>
-  <script src="js/trains.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>

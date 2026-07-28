@@ -1,6 +1,6 @@
-# Train Grid
+# KAZ Grid
 
-Jeu HTML5 Canvas au style Mini Motorways — grille, rivières, gares colorées et réseau de rails.
+Jeu de grille inspiré de [KAZ](https://store.steampowered.com/app/3633760/KAZ/) — déplacez votre carte sur une grille pour éliminer les cases ennemies.
 
 ## Jouer
 
@@ -10,11 +10,15 @@ python3 -m http.server 8080
 
 Ouvrez http://localhost:8080
 
+## Contrôles
+
+- **Clavier** : flèches ou ZQSD / WASD
+- **Mobile** : swipe sur la grille ou boutons directionnels
+- Atteignez l'objectif de score avant la fin du timer
+
 ## Fichiers
 
-- `index.html` — structure du jeu
-- `css/style.css` — interface minimaliste
-- `js/grid.js` — grille, terrain, eau, gares
-- `js/rails.js` — parcours de rails sur la grille
-- `js/trains.js` — trains animés
-- `js/game.js` — boucle de jeu Canvas
+- `index.html` — page du jeu
+- `css/style.css` — interface sombre minimaliste
+- `js/grid.js` — rendu de la grille et des cartes
+- `js/game.js` — logique, déplacements, score
