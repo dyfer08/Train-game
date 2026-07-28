@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Train Spotter</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <h1>Train Spotter</h1>
+      <div class="score-board">
+        <span class="score-label">Score</span>
+        <span id="score">0</span>
+      </div>
+    </header>
+
+    <main class="game-area">
+      <!-- Phase mémorisation -->
+      <section id="phase-memorize" class="phase active">
+        <p class="phase-instruction">Mémorisez ce train !</p>
+        <div id="target-train-container" class="train-preview"></div>
+        <div class="countdown-bar">
+          <div id="countdown-fill" class="countdown-fill"></div>
+        </div>
+      </section>
+
+      <!-- Phase recherche -->
+      <section id="phase-search" class="phase">
+        <p class="phase-instruction">Trouvez-le sur le circuit !</p>
+        <canvas id="circuit-canvas"></canvas>
+        <p id="feedback" class="feedback" aria-live="polite"></p>
+      </section>
+
+      <!-- Phase victoire -->
+      <section id="phase-win" class="phase">
+        <div class="win-content">
+          <p class="win-emoji">🎉</p>
+          <p class="win-text">Bravo !</p>
+          <p class="win-sub">Train trouvé</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <button id="btn-start" class="btn-primary">Jouer</button>
+    </footer>
+  </div>
+
+  <script src="js/train.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
