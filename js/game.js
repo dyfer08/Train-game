@@ -5,7 +5,7 @@
   const MEMORIZE_DURATION = 3500;
   const WIN_DISPLAY_DURATION = 1200;
   const TRAIN_COUNT = 7;
-  const TRAIN_SCALE = 0.72;
+  const TRAIN_SCALE = 0.68;
 
   const phases = {
     memorize: document.getElementById('phase-memorize'),

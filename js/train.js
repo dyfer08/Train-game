@@ -142,6 +142,11 @@ const TrainFactory = (() => {
       ctx.translate(pos.x, pos.y);
       ctx.rotate(angle);
 
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.18)';
+      ctx.shadowBlur = 4 * s;
+      ctx.shadowOffsetX = 2 * s;
+      ctx.shadowOffsetY = 2 * s;
+
       if (seg.type === 'loco') {
         drawLocomotive(ctx, config, -seg.length / 2, -carH / 2, seg.length, carH, s);
       } else {
@@ -151,8 +156,6 @@ const TrainFactory = (() => {
       ctx.restore();
     });
   }
-
-  /** Points le long du train pour la détection de clic */
   function getTrainHitPoints(config, getPointAtDistance, path, distance, scale, direction) {
     const segments = getSegmentLayout(config, scale);
     const total = path.length;

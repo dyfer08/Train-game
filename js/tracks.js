@@ -1,113 +1,99 @@
 /**
- * Réseau ferroviaire interconnecté — hub central, boucles et embranchements
+ * Réseau style Mini Motorways — grille, voies blanches, eau, hubs colorés
  */
 const TrackFactory = (() => {
-  const MARGIN = 14;
+  const MARGIN = 16;
+  const ROAD_WIDTH = 13;
 
-  /** Nœuds du réseau (coords normalisées 0–1) */
-  const NODES = {
-    st_n:  { x: 0.50, y: 0.07, type: 'station' },
-    st_ne: { x: 0.74, y: 0.13, type: 'station' },
-    st_e:  { x: 0.93, y: 0.50, type: 'station' },
-    st_se: { x: 0.74, y: 0.87, type: 'station' },
-    st_s:  { x: 0.50, y: 0.93, type: 'station' },
-    st_sw: { x: 0.26, y: 0.87, type: 'station' },
-    st_w:  { x: 0.07, y: 0.50, type: 'station' },
-    st_nw: { x: 0.26, y: 0.13, type: 'station' },
-
-    j_n:  { x: 0.50, y: 0.21, type: 'junction' },
-    j_ne: { x: 0.67, y: 0.21, type: 'junction' },
-    j_e:  { x: 0.79, y: 0.50, type: 'junction' },
-    j_se: { x: 0.67, y: 0.79, type: 'junction' },
-    j_s:  { x: 0.50, y: 0.79, type: 'junction' },
-    j_sw: { x: 0.33, y: 0.79, type: 'junction' },
-    j_w:  { x: 0.21, y: 0.50, type: 'junction' },
-    j_nw: { x: 0.33, y: 0.21, type: 'junction' },
-
-    hub:  { x: 0.50, y: 0.50, type: 'hub' },
-    hub_n: { x: 0.50, y: 0.35, type: 'junction' },
-    hub_s: { x: 0.50, y: 0.65, type: 'junction' },
-    hub_e: { x: 0.65, y: 0.50, type: 'junction' },
-    hub_w: { x: 0.35, y: 0.50, type: 'junction' },
+  const STATION_COLORS = {
+    st_n: '#6366f1', st_ne: '#ec4899', st_e: '#f59e0b', st_se: '#ef4444',
+    st_s: '#8b5cf6', st_sw: '#14b8a6', st_w: '#3b82f6', st_nw: '#f97316',
   };
 
-  /**
-   * Segments du réseau : [de, vers, courbure]
-   * courbure = décalage perpendiculaire pour adoucir les virages
-   */
+  const NODES = {
+    st_n:  { x: 0.50, y: 0.06, type: 'station' },
+    st_ne: { x: 0.82, y: 0.06, type: 'station' },
+    st_e:  { x: 0.94, y: 0.50, type: 'station' },
+    st_se: { x: 0.82, y: 0.94, type: 'station' },
+    st_s:  { x: 0.50, y: 0.94, type: 'station' },
+    st_sw: { x: 0.18, y: 0.94, type: 'station' },
+    st_w:  { x: 0.06, y: 0.50, type: 'station' },
+    st_nw: { x: 0.18, y: 0.06, type: 'station' },
+
+    j_n:  { x: 0.50, y: 0.20, type: 'junction' },
+    j_ne: { x: 0.82, y: 0.20, type: 'junction' },
+    j_e:  { x: 0.82, y: 0.50, type: 'junction' },
+    j_se: { x: 0.82, y: 0.80, type: 'junction' },
+    j_s:  { x: 0.50, y: 0.80, type: 'junction' },
+    j_sw: { x: 0.18, y: 0.80, type: 'junction' },
+    j_w:  { x: 0.18, y: 0.50, type: 'junction' },
+    j_nw: { x: 0.18, y: 0.20, type: 'junction' },
+
+    hub:  { x: 0.50, y: 0.50, type: 'hub' },
+    hub_n: { x: 0.50, y: 0.34, type: 'junction' },
+    hub_s: { x: 0.50, y: 0.66, type: 'junction' },
+    hub_e: { x: 0.66, y: 0.50, type: 'junction' },
+    hub_w: { x: 0.34, y: 0.50, type: 'junction' },
+  };
+
   const SEGMENTS = [
-    ['st_n', 'j_n', 0], ['j_n', 'j_ne', 0.02], ['j_ne', 'st_ne', 0.02],
-    ['st_ne', 'j_ne', 0], ['j_ne', 'j_e', 0.03], ['j_e', 'st_e', 0],
-    ['st_e', 'j_e', 0], ['j_e', 'j_se', 0.03], ['j_se', 'st_se', 0.02],
-    ['st_se', 'j_se', 0], ['j_se', 'j_s', 0.02], ['j_s', 'st_s', 0],
-    ['st_s', 'j_s', 0], ['j_s', 'j_sw', 0.02], ['j_sw', 'st_sw', 0.02],
-    ['st_sw', 'j_sw', 0], ['j_sw', 'j_w', 0.03], ['j_w', 'st_w', 0],
-    ['st_w', 'j_w', 0], ['j_w', 'j_nw', 0.03], ['j_nw', 'st_nw', 0.02],
-    ['st_nw', 'j_nw', 0], ['j_nw', 'j_n', 0.02], ['j_n', 'st_n', 0],
+    ['st_n', 'j_n'], ['j_n', 'j_ne'], ['j_ne', 'st_ne'],
+    ['st_ne', 'j_ne'], ['j_ne', 'j_e'], ['j_e', 'st_e'],
+    ['st_e', 'j_e'], ['j_e', 'j_se'], ['j_se', 'st_se'],
+    ['st_se', 'j_se'], ['j_se', 'j_s'], ['j_s', 'st_s'],
+    ['st_s', 'j_s'], ['j_s', 'j_sw'], ['j_sw', 'st_sw'],
+    ['st_sw', 'j_sw'], ['j_sw', 'j_w'], ['j_w', 'st_w'],
+    ['st_w', 'j_w'], ['j_w', 'j_nw'], ['j_nw', 'st_nw'],
+    ['st_nw', 'j_nw'], ['j_nw', 'j_n'], ['j_n', 'st_n'],
 
-    ['j_n', 'hub_n', 0], ['hub_n', 'hub', 0], ['hub', 'hub_s', 0],
-    ['hub_s', 'j_s', 0], ['hub', 'hub_e', 0], ['hub_e', 'j_e', 0],
-    ['hub', 'hub_w', 0], ['hub_w', 'j_w', 0],
+    ['j_n', 'hub_n'], ['hub_n', 'hub'], ['hub', 'hub_s'], ['hub_s', 'j_s'],
+    ['hub', 'hub_e'], ['hub_e', 'j_e'], ['hub', 'hub_w'], ['hub_w', 'j_w'],
 
-    ['j_ne', 'hub_n', 0.015], ['hub_n', 'hub_e', 0.015],
-    ['j_se', 'hub_s', 0.015], ['hub_s', 'hub_e', 0.015],
-    ['j_sw', 'hub_s', 0.015], ['hub_s', 'hub_w', 0.015],
-    ['j_nw', 'hub_n', 0.015], ['hub_n', 'hub_w', 0.015],
-
-    ['j_ne', 'hub_e', 0.02], ['j_se', 'hub_e', 0.02],
-    ['j_sw', 'hub_w', 0.02], ['j_nw', 'hub_w', 0.02],
+    ['j_ne', 'hub_n'], ['hub_n', 'hub_e'], ['j_se', 'hub_s'], ['hub_s', 'hub_e'],
+    ['j_sw', 'hub_s'], ['hub_s', 'hub_w'], ['j_nw', 'hub_n'], ['hub_n', 'hub_w'],
+    ['j_ne', 'hub_e'], ['j_se', 'hub_e'], ['j_sw', 'hub_w'], ['j_nw', 'hub_w'],
   ];
 
-  /** 7 itinéraires fermés — chaque train a le sien */
   const ROUTES = [
-    {
-      name: 'Grande boucle',
-      nodes: [
-        'st_n', 'j_n', 'j_ne', 'st_ne', 'j_e', 'st_e', 'j_se', 'st_se',
-        'j_s', 'st_s', 'j_sw', 'st_sw', 'j_w', 'st_w', 'j_nw', 'st_nw', 'j_n', 'st_n',
-      ],
-    },
-    {
-      name: 'Boucle nord-est',
-      nodes: [
-        'st_ne', 'j_ne', 'hub_n', 'hub_e', 'j_e', 'st_e', 'j_e', 'j_se',
-        'hub_e', 'hub_n', 'j_ne', 'st_ne',
-      ],
-    },
-    {
-      name: 'Boucle sud-ouest',
-      nodes: [
-        'st_sw', 'j_sw', 'hub_s', 'hub_w', 'j_w', 'st_w', 'j_w', 'j_nw',
-        'hub_w', 'hub_s', 'j_sw', 'st_sw',
-      ],
-    },
-    {
-      name: 'Traversée est-ouest',
-      nodes: [
-        'st_w', 'j_w', 'hub_w', 'hub', 'hub_e', 'j_e', 'st_e', 'j_e',
-        'hub_e', 'hub', 'hub_w', 'j_w', 'st_w',
-      ],
-    },
-    {
-      name: 'Traversée nord-sud',
-      nodes: [
-        'st_n', 'j_n', 'hub_n', 'hub', 'hub_s', 'j_s', 'st_s', 'j_s',
-        'hub_s', 'hub', 'hub_n', 'j_n', 'st_n',
-      ],
-    },
-    {
-      name: 'Anneau intérieur',
-      nodes: [
-        'j_nw', 'hub_n', 'j_ne', 'hub_e', 'j_se', 'hub_s', 'j_sw', 'hub_w', 'j_nw',
-      ],
-    },
-    {
-      name: 'Ligne de service',
-      nodes: [
-        'st_nw', 'j_nw', 'j_n', 'hub_n', 'hub', 'hub_s', 'j_s', 'j_sw',
-        'st_sw', 'j_sw', 'hub_s', 'hub_w', 'j_w', 'j_nw', 'st_nw',
-      ],
-    },
+    { name: 'Grande boucle', nodes: [
+      'st_n', 'j_n', 'j_ne', 'st_ne', 'j_e', 'st_e', 'j_se', 'st_se',
+      'j_s', 'st_s', 'j_sw', 'st_sw', 'j_w', 'st_w', 'j_nw', 'st_nw', 'j_n', 'st_n',
+    ]},
+    { name: 'Boucle nord-est', nodes: [
+      'st_ne', 'j_ne', 'hub_n', 'hub_e', 'j_e', 'st_e', 'j_e', 'j_se',
+      'hub_e', 'hub_n', 'j_ne', 'st_ne',
+    ]},
+    { name: 'Boucle sud-ouest', nodes: [
+      'st_sw', 'j_sw', 'hub_s', 'hub_w', 'j_w', 'st_w', 'j_w', 'j_nw',
+      'hub_w', 'hub_s', 'j_sw', 'st_sw',
+    ]},
+    { name: 'Traversée est-ouest', nodes: [
+      'st_w', 'j_w', 'hub_w', 'hub', 'hub_e', 'j_e', 'st_e', 'j_e',
+      'hub_e', 'hub', 'hub_w', 'j_w', 'st_w',
+    ]},
+    { name: 'Traversée nord-sud', nodes: [
+      'st_n', 'j_n', 'hub_n', 'hub', 'hub_s', 'j_s', 'st_s', 'j_s',
+      'hub_s', 'hub', 'hub_n', 'j_n', 'st_n',
+    ]},
+    { name: 'Anneau intérieur', nodes: [
+      'j_nw', 'hub_n', 'j_ne', 'hub_e', 'j_se', 'hub_s', 'j_sw', 'hub_w', 'j_nw',
+    ]},
+    { name: 'Ligne de service', nodes: [
+      'st_nw', 'j_nw', 'j_n', 'hub_n', 'hub', 'hub_s', 'j_s', 'j_sw',
+      'st_sw', 'j_sw', 'hub_s', 'hub_w', 'j_w', 'j_nw', 'st_nw',
+    ]},
+  ];
+
+  const TERRAIN = [
+    { cx: 0.28, cy: 0.38, rx: 0.11, ry: 0.09, color: '#fce7f3' },
+    { cx: 0.74, cy: 0.62, rx: 0.13, ry: 0.10, color: '#fef9c3' },
+    { cx: 0.55, cy: 0.22, rx: 0.08, ry: 0.06, color: '#fef9c3' },
+  ];
+
+  const WATER = [
+    { cx: 0.38, cy: 0.54, rx: 0.14, ry: 0.07 },
+    { cx: 0.70, cy: 0.36, rx: 0.16, ry: 0.05 },
+    { cx: 0.62, cy: 0.72, rx: 0.10, ry: 0.06 },
   ];
 
   function scalePoint(nx, ny, w, h) {
@@ -116,49 +102,20 @@ const TrackFactory = (() => {
     return { x: MARGIN + nx * innerW, y: MARGIN + ny * innerH };
   }
 
-  function sampleSegment(fromId, toId, bulge, steps = 22) {
-    const a = NODES[fromId];
-    const b = NODES[toId];
-    if (!a || !b) return [];
-
-    const points = [];
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const len = Math.hypot(dx, dy) || 1;
-    const nx = -dy / len;
-    const ny = dx / len;
-    const cx = (a.x + b.x) / 2 + nx * bulge;
-    const cy = (a.y + b.y) / 2 + ny * bulge;
-
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const u = 1 - t;
-      const px = u * u * a.x + 2 * u * t * cx + t * t * b.x;
-      const py = u * u * a.y + 2 * u * t * cy + t * t * b.y;
-      points.push(px, py);
-    }
-    return points;
-  }
-
-  function findSegment(fromId, toId) {
-    return SEGMENTS.find(([f, t]) => f === fromId && t === toId)
-      || SEGMENTS.find(([f, t]) => f === toId && t === fromId);
+  function orthoCorner(a, b, preferHorizontalFirst) {
+    if (Math.abs(a.x - b.x) < 1) return [a, b];
+    if (Math.abs(a.y - b.y) < 1) return [a, b];
+    if (preferHorizontalFirst) return [a, { x: b.x, y: a.y }, b];
+    return [a, { x: a.x, y: b.y }, b];
   }
 
   function buildSegmentPoints(fromId, toId, w, h) {
-    const seg = findSegment(fromId, toId);
-    if (!seg) return [];
-
-    const [f, t, bulge = 0] = seg;
-    const reversed = f !== fromId;
-    const raw = sampleSegment(f, t, bulge * (reversed ? -1 : 1));
-    const coords = [];
-    for (let i = 0; i < raw.length; i += 2) {
-      const p = scalePoint(raw[i], raw[i + 1], w, h);
-      coords.push(p);
-    }
-    if (reversed) coords.reverse();
-    return coords;
+    const a = scalePoint(NODES[fromId].x, NODES[fromId].y, w, h);
+    const b = scalePoint(NODES[toId].x, NODES[toId].y, w, h);
+    const dx = Math.abs(b.x - a.x);
+    const dy = Math.abs(b.y - a.y);
+    const preferH = dx >= dy;
+    return orthoCorner(a, b, preferH);
   }
 
   function appendPoints(pathPoints, newPoints) {
@@ -168,7 +125,7 @@ const TrackFactory = (() => {
       return;
     }
     const last = pathPoints[pathPoints.length - 1];
-    const startIdx = (Math.hypot(last.x - newPoints[0].x, last.y - newPoints[0].y) < 1) ? 1 : 0;
+    const startIdx = Math.hypot(last.x - newPoints[0].x, last.y - newPoints[0].y) < 1 ? 1 : 0;
     for (let i = startIdx; i < newPoints.length; i++) pathPoints.push(newPoints[i]);
   }
 
@@ -182,49 +139,48 @@ const TrackFactory = (() => {
 
   function buildRoutePath(route, w, h) {
     const points = [];
-    const nodeIds = route.nodes;
-
-    for (let i = 0; i < nodeIds.length - 1; i++) {
-      appendPoints(points, buildSegmentPoints(nodeIds[i], nodeIds[i + 1], w, h));
+    for (let i = 0; i < route.nodes.length - 1; i++) {
+      appendPoints(points, buildSegmentPoints(route.nodes[i], route.nodes[i + 1], w, h));
     }
-
     return { points, length: computeLength(points), closed: true, name: route.name };
   }
 
   function buildNetworkGeometry(w, h) {
-    const drawn = new Set();
-    const allPoints = [];
-
-    SEGMENTS.forEach(([fromId, toId, bulge]) => {
-      const key = [fromId, toId].sort().join('|');
-      if (drawn.has(key)) return;
-      drawn.add(key);
-
-      const raw = sampleSegment(fromId, toId, bulge);
-      for (let i = 0; i < raw.length; i += 2) {
-        allPoints.push(scalePoint(raw[i], raw[i + 1], w, h));
-      }
-    });
-
     const stations = Object.entries(NODES)
       .filter(([, n]) => n.type === 'station')
-      .map(([id, n]) => ({ id, ...scalePoint(n.x, n.y, w, h) }));
+      .map(([id, n]) => ({
+        id, color: STATION_COLORS[id] || '#64748b', ...scalePoint(n.x, n.y, w, h),
+      }));
 
     const junctions = Object.entries(NODES)
       .filter(([, n]) => n.type === 'junction' || n.type === 'hub')
       .map(([id, n]) => ({ id, ...scalePoint(n.x, n.y, w, h) }));
 
-    return { allPoints, stations, junctions, segments: SEGMENTS };
+    const terrain = TERRAIN.map((t) => ({
+      ...t,
+      ...scalePoint(t.cx, t.cy, w, h),
+      rx: t.rx * (w - MARGIN * 2),
+      ry: t.ry * (h - MARGIN * 2),
+    }));
+
+    const water = WATER.map((t) => ({
+      ...t,
+      ...scalePoint(t.cx, t.cy, w, h),
+      rx: t.rx * (w - MARGIN * 2),
+      ry: t.ry * (h - MARGIN * 2),
+    }));
+
+    return { stations, junctions, terrain, water };
   }
 
   function generateTracks(count, width, height) {
-    const network = buildNetworkGeometry(width, height);
-    const tracks = ROUTES.slice(0, count).map((route, i) => ({
-      ...buildRoutePath(route, width, height),
-      index: i,
-      color: '#64748b',
-    }));
-    return { tracks, network };
+    return {
+      tracks: ROUTES.slice(0, count).map((route, i) => ({
+        ...buildRoutePath(route, width, height),
+        index: i,
+      })),
+      network: buildNetworkGeometry(width, height),
+    };
   }
 
   function getPointAtDistance(path, dist) {
@@ -251,7 +207,21 @@ const TrackFactory = (() => {
     return { x: points[0].x, y: points[0].y, angle: 0 };
   }
 
-  function strokePolyline(ctx, points, close = false) {
+  function isInWater(x, y, w, h) {
+    const innerW = w - MARGIN * 2;
+    const innerH = h - MARGIN * 2;
+    return WATER.some((zone) => {
+      const cx = MARGIN + zone.cx * innerW;
+      const cy = MARGIN + zone.cy * innerH;
+      const rx = zone.rx * innerW;
+      const ry = zone.ry * innerH;
+      const nx = (x - cx) / rx;
+      const ny = (y - cy) / ry;
+      return nx * nx + ny * ny <= 1;
+    });
+  }
+
+  function strokePath(ctx, points, close = false) {
     if (points.length < 2) return;
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
@@ -260,51 +230,137 @@ const TrackFactory = (() => {
     ctx.stroke();
   }
 
-  function drawTerrain(ctx, w, h, dpr) {
-    const grd = ctx.createLinearGradient(0, 0, 0, h);
-    grd.addColorStop(0, '#1a2e1a');
-    grd.addColorStop(0.5, '#243424');
-    grd.addColorStop(1, '#1a2818');
-    ctx.fillStyle = grd;
+  function drawGrid(ctx, w, h, dpr) {
+    ctx.fillStyle = '#f4f4f5';
     ctx.fillRect(0, 0, w, h);
 
-    ctx.fillStyle = 'rgba(34, 55, 38, 0.55)';
-    [
-      [0.15, 0.35, 28], [0.85, 0.25, 22], [0.12, 0.72, 24],
-      [0.88, 0.78, 26], [0.45, 0.45, 18], [0.62, 0.62, 16],
-    ].forEach(([nx, ny, r]) => {
-      const x = MARGIN + nx * (w - MARGIN * 2);
-      const y = MARGIN + ny * (h - MARGIN * 2);
+    const step = 18 * dpr;
+    ctx.strokeStyle = '#e4e4e7';
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= w; x += step) {
       ctx.beginPath();
-      ctx.arc(x, y, r * dpr, 0, Math.PI * 2);
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, h);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= h; y += step) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+  }
+
+  function drawBlob(ctx, cx, cy, rx, ry, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawWaterZones(ctx, network) {
+    network.water.forEach((zone) => {
+      ctx.fillStyle = '#bae6fd';
+      ctx.beginPath();
+      ctx.ellipse(zone.x, zone.y, zone.rx, zone.ry, 0, 0, Math.PI * 2);
       ctx.fill();
     });
   }
 
-  function drawStation(ctx, x, y, dpr) {
-    const s = 5 * dpr;
-    ctx.fillStyle = '#3d2b1f';
-    ctx.fillRect(x - s, y - s * 0.6, s * 2, s * 1.2);
-    ctx.fillStyle = '#64748b';
-    ctx.beginPath();
-    ctx.moveTo(x - s * 1.1, y - s * 0.6);
-    ctx.lineTo(x, y - s * 1.5);
-    ctx.lineTo(x + s * 1.1, y - s * 0.6);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = 'rgba(251, 191, 36, 0.7)';
-    ctx.fillRect(x - s * 0.35, y - s * 0.2, s * 0.7, s * 0.5);
-  }
+  function drawRoadSegment(ctx, pts, w, h, dpr, isBridge) {
+    const width = ROAD_WIDTH * dpr;
 
-  function drawNetwork(ctx, network, w, h, dpr) {
-    drawTerrain(ctx, w, h, dpr);
-
-    const trackW = 10 * dpr;
+    ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.14)';
+    ctx.shadowBlur = 5 * dpr;
+    ctx.shadowOffsetX = 2 * dpr;
+    ctx.shadowOffsetY = 3 * dpr;
+
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = width;
+    strokePath(ctx, pts);
+
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    if (isBridge) {
+      ctx.strokeStyle = '#27272a';
+      ctx.lineWidth = 1.5 * dpr;
+      const offset = (width / 2 - 2 * dpr);
+      for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1];
+        const b = pts[i];
+        const angle = Math.atan2(b.y - a.y, b.x - a.x);
+        const px = Math.sin(angle);
+        const py = -Math.cos(angle);
+        ctx.beginPath();
+        ctx.moveTo(a.x + px * offset, a.y + py * offset);
+        ctx.lineTo(b.x + px * offset, b.y + py * offset);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(a.x - px * offset, a.y - py * offset);
+        ctx.lineTo(b.x - px * offset, b.y - py * offset);
+        ctx.stroke();
+      }
+    }
+
+    ctx.restore();
+  }
+
+  function drawHub(ctx, x, y, dpr) {
+    const size = 11 * dpr;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.12)';
+    ctx.shadowBlur = 4 * dpr;
+    ctx.shadowOffsetX = 2 * dpr;
+    ctx.shadowOffsetY = 2 * dpr;
+    ctx.fillStyle = '#fafafa';
+    ctx.strokeStyle = '#d4d4d8';
+    ctx.lineWidth = 1.5 * dpr;
+    ctx.beginPath();
+    ctx.roundRect(x - size, y - size, size * 2, size * 2, 4 * dpr);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.fillStyle = '#a1a1aa';
+    ctx.beginPath();
+    ctx.arc(x, y, 3 * dpr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawStation(ctx, st, dpr) {
+    const size = 9 * dpr;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.15)';
+    ctx.shadowBlur = 5 * dpr;
+    ctx.shadowOffsetX = 2 * dpr;
+    ctx.shadowOffsetY = 3 * dpr;
+    ctx.fillStyle = st.color;
+    ctx.beginPath();
+    ctx.roundRect(st.x - size, st.y - size, size * 2, size * 2, 3 * dpr);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.beginPath();
+    ctx.roundRect(st.x - size * 0.45, st.y - size * 0.45, size * 0.9, size * 0.9, 2 * dpr);
+    ctx.fill();
+  }
+
+  function drawNetwork(ctx, network, w, h, dpr) {
+    drawGrid(ctx, w, h, dpr);
+
+    network.terrain.forEach((t) => drawBlob(ctx, t.x, t.y, t.rx, t.ry, t.color));
+    drawWaterZones(ctx, network);
+
     const drawn = new Set();
-    SEGMENTS.forEach(([fromId, toId, bulge]) => {
+    SEGMENTS.forEach(([fromId, toId]) => {
       const key = [fromId, toId].sort().join('|');
       if (drawn.has(key)) return;
       drawn.add(key);
@@ -312,61 +368,27 @@ const TrackFactory = (() => {
       const pts = buildSegmentPoints(fromId, toId, w, h);
       if (pts.length < 2) return;
 
-      ctx.strokeStyle = '#0f1419';
-      ctx.lineWidth = trackW + 5 * dpr;
-      strokePolyline(ctx, pts);
-
-      ctx.strokeStyle = '#5c4a32';
-      ctx.lineWidth = trackW * 0.35;
-      strokePolyline(ctx, pts);
-
-      ctx.strokeStyle = '#94a3b8';
-      ctx.lineWidth = 2 * dpr;
-      strokePolyline(ctx, pts);
-
-      for (let i = 0; i < pts.length; i += 6) {
-        const p = pts[i];
-        const p2 = pts[Math.min(i + 1, pts.length - 1)];
-        const angle = Math.atan2(p2.y - p.y, p2.x - p.x) + Math.PI / 2;
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(angle);
-        ctx.fillStyle = '#4a3728';
-        ctx.fillRect(-4 * dpr, -1.2 * dpr, 8 * dpr, 2.4 * dpr);
-        ctx.restore();
-      }
+      const mid = pts[Math.floor(pts.length / 2)];
+      const bridge = isInWater(mid.x, mid.y, w, h);
+      drawRoadSegment(ctx, pts, w, h, dpr, bridge);
     });
 
     network.junctions.forEach((j) => {
-      if (j.id === 'hub') {
-        ctx.fillStyle = '#334155';
+      if (j.id !== 'hub') {
+        ctx.fillStyle = '#d4d4d8';
         ctx.beginPath();
-        ctx.arc(j.x, j.y, 6 * dpr, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#64748b';
-        ctx.lineWidth = 1.5 * dpr;
-        ctx.stroke();
-      } else {
-        ctx.fillStyle = '#475569';
-        ctx.beginPath();
-        ctx.arc(j.x, j.y, 3 * dpr, 0, Math.PI * 2);
+        ctx.arc(j.x, j.y, 2.5 * dpr, 0, Math.PI * 2);
         ctx.fill();
       }
     });
 
-    network.stations.forEach((st) => drawStation(ctx, st.x, st.y, dpr));
+    const hub = network.junctions.find((j) => j.id === 'hub');
+    if (hub) drawHub(ctx, hub.x, hub.y, dpr);
+
+    network.stations.forEach((st) => drawStation(ctx, st, dpr));
   }
 
-  function drawTrack(ctx, path, dpr, options = {}) {
-    if (options.highlight) {
-      const { points } = path;
-      ctx.strokeStyle = options.highlight;
-      ctx.lineWidth = 3 * dpr;
-      ctx.globalAlpha = 0.35;
-      strokePolyline(ctx, points, path.closed);
-      ctx.globalAlpha = 1;
-    }
-  }
+  function drawTrack() {}
 
   return {
     generateTracks,
