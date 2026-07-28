@@ -66,16 +66,45 @@ const TrainFactory = (() => {
     return decoys;
   }
 
+  function getDimensions(scale) {
+    return {
+      carW: 28 * scale,
+      carH: 14 * scale,
+      locoW: 34 * scale,
+      gap: 2 * scale,
+    };
+  }
+
+  /** Segments du train de l'avant vers l'arrière (distances en px le long du rail) */
+  function getSegmentLayout(config, scale) {
+    const { carW, locoW, gap } = getDimensions(scale);
+    const segments = [{ type: 'loco', length: locoW, centerFromFront: locoW / 2 }];
+
+    for (let i = 0; i < config.carCount; i++) {
+      const fromFront = locoW + gap + i * (carW + gap) + carW / 2;
+      segments.push({
+        type: 'car',
+        length: carW,
+        centerFromFront: fromFront,
+        isLast: i === config.carCount - 1,
+      });
+    }
+
+    return segments;
+  }
+
+  function getTrainLength(config, scale) {
+    const { carW, locoW, gap } = getDimensions(scale);
+    return locoW + gap + config.carCount * (carW + gap);
+  }
+
   function drawTrain(ctx, config, x, y, scale, angle) {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
 
     const s = scale;
-    const carW = 28 * s;
-    const carH = 14 * s;
-    const locoW = 34 * s;
-    const gap = 2 * s;
+    const { carW, carH, locoW, gap } = getDimensions(s);
     const totalCars = config.carCount;
     const totalW = locoW + gap + totalCars * (carW + gap);
 
@@ -89,6 +118,53 @@ const TrainFactory = (() => {
     }
 
     ctx.restore();
+  }
+
+  /**
+   * Dessine le train segment par segment le long d'un chemin courbe.
+   * Chaque voiture/locomotive est orientée selon la tangente locale au rail.
+   */
+  function drawTrainOnPath(ctx, config, getPointAtDistance, path, distance, scale, direction) {
+    const s = scale;
+    const { carH } = getDimensions(s);
+    const segments = getSegmentLayout(config, s);
+    const total = path.length;
+    const trainLength = getTrainLength(config, s);
+    const frontDist = distance + (trainLength / 2) * direction;
+
+    segments.forEach((seg) => {
+      const centerDist = frontDist - seg.centerFromFront * direction;
+      const wrapped = ((centerDist % total) + total) % total;
+      const pos = getPointAtDistance(path, wrapped);
+      const angle = direction === 1 ? pos.angle : pos.angle + Math.PI;
+
+      ctx.save();
+      ctx.translate(pos.x, pos.y);
+      ctx.rotate(angle);
+
+      if (seg.type === 'loco') {
+        drawLocomotive(ctx, config, -seg.length / 2, -carH / 2, seg.length, carH, s);
+      } else {
+        drawCar(ctx, config, -seg.length / 2, -carH / 2, seg.length, carH, s, seg.isLast);
+      }
+
+      ctx.restore();
+    });
+  }
+
+  /** Points le long du train pour la détection de clic */
+  function getTrainHitPoints(config, getPointAtDistance, path, distance, scale, direction) {
+    const segments = getSegmentLayout(config, scale);
+    const total = path.length;
+    const trainLength = getTrainLength(config, scale);
+    const frontDist = distance + (trainLength / 2) * direction;
+
+    return segments.map((seg) => {
+      const centerDist = frontDist - seg.centerFromFront * direction;
+      const wrapped = ((centerDist % total) + total) % total;
+      const pos = getPointAtDistance(path, wrapped);
+      return { x: pos.x, y: pos.y, radius: Math.max(seg.length, 14 * scale) * 0.55 };
+    });
   }
 
   function drawLocomotive(ctx, config, x, y, w, h, s) {
@@ -212,6 +288,9 @@ const TrainFactory = (() => {
     generateDecoys,
     configsEqual,
     drawTrain,
+    drawTrainOnPath,
+    getTrainHitPoints,
+    getTrainLength,
     renderToCanvas,
     getTrainBounds,
   };

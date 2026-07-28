@@ -208,11 +208,15 @@
         if (train.distance < 0) train.distance += trackLength;
         if (train.distance > trackLength) train.distance -= trackLength;
 
-        const pos = getPointAtDistance(trackPath, train.distance);
-        ctx.save();
-        ctx.scale(1 / dpr, 1 / dpr);
-        TrainFactory.drawTrain(ctx, train.config, pos.x * dpr, pos.y * dpr, TRAIN_SCALE * dpr, pos.angle);
-        ctx.restore();
+        TrainFactory.drawTrainOnPath(
+          ctx,
+          train.config,
+          getPointAtDistance,
+          trackPath,
+          train.distance,
+          TRAIN_SCALE,
+          train.direction
+        );
       });
 
       animFrameId = requestAnimationFrame(loop);
@@ -222,16 +226,25 @@
   }
 
   function getTrainAtPoint(px, py) {
-    const hitRadius = 30;
     let closest = null;
     let closestDist = Infinity;
 
     trains.forEach((train, index) => {
-      const pos = getPointAtDistance(trackPath, train.distance);
-      const dist = Math.hypot(px - pos.x, py - pos.y);
-      if (dist < hitRadius && dist < closestDist) {
-        closestDist = dist;
-        closest = index;
+      const hitPoints = TrainFactory.getTrainHitPoints(
+        train.config,
+        getPointAtDistance,
+        trackPath,
+        train.distance,
+        TRAIN_SCALE,
+        train.direction
+      );
+
+      for (const pt of hitPoints) {
+        const dist = Math.hypot(px - pt.x, py - pt.y);
+        if (dist < pt.radius && dist < closestDist) {
+          closestDist = dist;
+          closest = index;
+        }
       }
     });
 
