@@ -5,7 +5,7 @@
   const MEMORIZE_DURATION = 3500;
   const WIN_DISPLAY_DURATION = 1200;
   const TRAIN_COUNT = 7;
-  const TRAIN_SCALE = 1.1;
+  const TRAIN_SCALE = 0.82;
 
   const phases = {
     memorize: document.getElementById('phase-memorize'),
@@ -26,109 +26,10 @@
   let targetConfig = null;
   let targetIndex = 0;
   let trains = [];
-  let trackPath = null;
-  let trackLength = 0;
+  let tracks = [];
   let animFrameId = null;
   let gameState = 'idle';
   let dpr = 1;
-
-  // --- Circuit en forme de 8 (lemniscate) ---
-  function buildTrackPath(w, h) {
-    const cx = w / 2;
-    const cy = h / 2;
-    const rx = w * 0.38;
-    const ry = h * 0.32;
-
-    const points = [];
-    const segments = 360;
-    for (let i = 0; i <= segments; i++) {
-      const t = (i / segments) * Math.PI * 2;
-      const denom = 1 + Math.sin(t) * Math.sin(t);
-      const px = cx + (rx * Math.cos(t)) / denom;
-      const py = cy + (ry * Math.sin(t) * Math.cos(t)) / denom;
-      points.push({ x: px, y: py });
-    }
-
-    let length = 0;
-    for (let i = 1; i < points.length; i++) {
-      const dx = points[i].x - points[i - 1].x;
-      const dy = points[i].y - points[i - 1].y;
-      length += Math.hypot(dx, dy);
-    }
-
-    return { points, length };
-  }
-
-  function getPointAtDistance(path, dist) {
-    const { points } = path;
-    const total = path.length;
-    dist = ((dist % total) + total) % total;
-
-    let accumulated = 0;
-    for (let i = 1; i < points.length; i++) {
-      const dx = points[i].x - points[i - 1].x;
-      const dy = points[i].y - points[i - 1].y;
-      const segLen = Math.hypot(dx, dy);
-      if (accumulated + segLen >= dist) {
-        const t = (dist - accumulated) / segLen;
-        const x = points[i - 1].x + dx * t;
-        const y = points[i - 1].y + dy * t;
-        const angle = Math.atan2(dy, dx);
-        return { x, y, angle };
-      }
-      accumulated += segLen;
-    }
-    return { x: points[0].x, y: points[0].y, angle: 0 };
-  }
-
-  function drawTrack() {
-    const { points } = trackPath;
-    const trackW = 14 * dpr;
-
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    ctx.strokeStyle = '#1a2332';
-    ctx.lineWidth = trackW + 6 * dpr;
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].y);
-    }
-    ctx.closePath();
-    ctx.stroke();
-
-    ctx.strokeStyle = '#475569';
-    ctx.lineWidth = trackW;
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].y);
-    }
-    ctx.closePath();
-    ctx.stroke();
-
-    ctx.strokeStyle = '#64748b';
-    ctx.lineWidth = 1.5 * dpr;
-    ctx.setLineDash([8 * dpr, 12 * dpr]);
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].y);
-    }
-    ctx.closePath();
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    points.forEach((p, i) => {
-      if (i % 30 === 0) {
-        ctx.fillStyle = '#334155';
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 3 * dpr, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    });
-  }
 
   function resizeCanvas() {
     const rect = canvas.getBoundingClientRect();
@@ -136,23 +37,34 @@
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    trackPath = buildTrackPath(rect.width, rect.height);
-    trackLength = trackPath.length;
+    tracks = TrackFactory.generateTracks(TRAIN_COUNT, rect.width, rect.height);
+  }
+
+  function drawAllTracks() {
+    tracks.forEach((track) => {
+      TrackFactory.drawTrack(ctx, track, dpr, { width: 9, drawSleepers: true });
+    });
   }
 
   function setupTrains() {
+    if (tracks.length === 0) resizeCanvas();
+
     targetConfig = TrainFactory.generateConfig();
     const decoys = TrainFactory.generateDecoys(targetConfig, TRAIN_COUNT - 1);
     const allConfigs = [...decoys];
     targetIndex = Math.floor(Math.random() * TRAIN_COUNT);
     allConfigs.splice(targetIndex, 0, targetConfig);
 
-    trains = allConfigs.map((config, i) => ({
-      config,
-      distance: (trackLength / TRAIN_COUNT) * i + Math.random() * 40,
-      speed: 0.6 + Math.random() * 0.8,
-      direction: Math.random() > 0.5 ? 1 : -1,
-    }));
+    trains = allConfigs.map((config, i) => {
+      const track = tracks[i];
+      return {
+        config,
+        trackIndex: i,
+        distance: track.length * (0.15 + Math.random() * 0.7),
+        speed: 0.5 + Math.random() * 0.7,
+        direction: Math.random() > 0.5 ? 1 : -1,
+      };
+    });
   }
 
   function showPhase(name) {
@@ -189,6 +101,7 @@
     showPhase('search');
     btnStart.classList.add('hidden');
     resizeCanvas();
+    setupTrains();
     startAnimation();
   }
 
@@ -201,18 +114,19 @@
       const rect = canvas.getBoundingClientRect();
       ctx.clearRect(0, 0, rect.width, rect.height);
 
-      drawTrack();
+      drawAllTracks();
 
       trains.forEach((train) => {
+        const track = tracks[train.trackIndex];
         train.distance += train.speed * train.direction;
-        if (train.distance < 0) train.distance += trackLength;
-        if (train.distance > trackLength) train.distance -= trackLength;
+        if (train.distance < 0) train.distance += track.length;
+        if (train.distance > track.length) train.distance -= track.length;
 
         TrainFactory.drawTrainOnPath(
           ctx,
           train.config,
-          getPointAtDistance,
-          trackPath,
+          TrackFactory.getPointAtDistance,
+          track,
           train.distance,
           TRAIN_SCALE,
           train.direction
@@ -230,10 +144,11 @@
     let closestDist = Infinity;
 
     trains.forEach((train, index) => {
+      const track = tracks[train.trackIndex];
       const hitPoints = TrainFactory.getTrainHitPoints(
         train.config,
-        getPointAtDistance,
-        trackPath,
+        TrackFactory.getPointAtDistance,
+        track,
         train.distance,
         TRAIN_SCALE,
         train.direction
@@ -283,6 +198,7 @@
     showPhase('win');
 
     setTimeout(() => {
+      resizeCanvas();
       setupTrains();
       startMemorizePhase();
     }, WIN_DISPLAY_DURATION);
@@ -291,7 +207,6 @@
   function startGame() {
     score = 0;
     scoreEl.textContent = '0';
-    setupTrains();
     btnStart.classList.add('hidden');
     startMemorizePhase();
   }
@@ -311,6 +226,9 @@
   window.addEventListener('resize', () => {
     if (gameState === 'search') {
       resizeCanvas();
+      trains.forEach((train) => {
+        train.distance = Math.min(train.distance, tracks[train.trackIndex].length * 0.95);
+      });
     }
   });
 
