@@ -25,6 +25,7 @@
   let score = 0;
   let targetConfig = null;
   let targetIndex = 0;
+  let roundConfigs = [];
   let trains = [];
   let tracks = [];
   let animFrameId = null;
@@ -46,16 +47,20 @@
     });
   }
 
-  function setupTrains() {
-    if (tracks.length === 0) resizeCanvas();
-
+  /** Génère le train cible et les leurres pour la manche en cours */
+  function setupRound() {
     targetConfig = TrainFactory.generateConfig();
     const decoys = TrainFactory.generateDecoys(targetConfig, TRAIN_COUNT - 1);
-    const allConfigs = [...decoys];
+    roundConfigs = [...decoys];
     targetIndex = Math.floor(Math.random() * TRAIN_COUNT);
-    allConfigs.splice(targetIndex, 0, targetConfig);
+    roundConfigs.splice(targetIndex, 0, targetConfig);
+  }
 
-    trains = allConfigs.map((config, i) => {
+  /** Place les trains sur leurs circuits (configs déjà fixées) */
+  function placeTrainsOnTracks() {
+    if (tracks.length === 0) resizeCanvas();
+
+    trains = roundConfigs.map((config, i) => {
       const track = tracks[i];
       return {
         config,
@@ -73,6 +78,7 @@
   }
 
   function renderTargetPreview() {
+    if (!targetConfig) return;
     targetContainer.innerHTML = '';
     const c = document.createElement('canvas');
     targetContainer.appendChild(c);
@@ -101,7 +107,7 @@
     showPhase('search');
     btnStart.classList.add('hidden');
     resizeCanvas();
-    setupTrains();
+    placeTrainsOnTracks();
     startAnimation();
   }
 
@@ -198,8 +204,7 @@
     showPhase('win');
 
     setTimeout(() => {
-      resizeCanvas();
-      setupTrains();
+      setupRound();
       startMemorizePhase();
     }, WIN_DISPLAY_DURATION);
   }
@@ -208,6 +213,7 @@
     score = 0;
     scoreEl.textContent = '0';
     btnStart.classList.add('hidden');
+    setupRound();
     startMemorizePhase();
   }
 
