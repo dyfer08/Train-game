@@ -4,56 +4,33 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Train Spotter</title>
+  <title>Train Grid</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div id="app">
-    <header class="header">
-      <div>
-        <p class="header-tag">Défi du jour</p>
-        <h1>Train Spotter</h1>
-      </div>
-      <div class="score-board">
-        <span class="score-label">Score</span>
-        <span id="score">0</span>
+  <div id="game">
+    <header class="hud-top">
+      <p class="hud-label">Défi du jour</p>
+      <div class="hud-icons">
+        <span class="hud-badge">1</span>
+        <span class="hud-pin" aria-hidden="true">◎</span>
       </div>
     </header>
 
-    <main class="game-area">
-      <!-- Phase mémorisation -->
-      <section id="phase-memorize" class="phase active">
-        <p class="phase-instruction">Mémorisez ce train !</p>
-        <div id="target-train-container" class="train-preview"></div>
-        <div class="countdown-bar">
-          <div id="countdown-fill" class="countdown-fill"></div>
-        </div>
-      </section>
-
-      <!-- Phase recherche -->
-      <section id="phase-search" class="phase">
-        <p class="phase-instruction">Trouvez-le sur les circuits !</p>
-        <canvas id="circuit-canvas"></canvas>
-        <p id="feedback" class="feedback" aria-live="polite"></p>
-      </section>
-
-      <!-- Phase victoire -->
-      <section id="phase-win" class="phase">
-        <div class="win-content">
-          <p class="win-emoji">🎉</p>
-          <p class="win-text">Bravo !</p>
-          <p class="win-sub">Train trouvé</p>
-        </div>
-      </section>
+    <main class="stage">
+      <canvas id="canvas" aria-label="Carte ferroviaire"></canvas>
     </main>
 
-    <footer class="footer">
-      <button id="btn-start" class="btn-primary">Jouer</button>
+    <footer class="hud-bottom">
+      <h1 class="city-name">Paris</h1>
+      <div class="city-line"></div>
+      <p class="city-score" id="score">0</p>
     </footer>
   </div>
 
-  <script src="js/train.js"></script>
-  <script src="js/tracks.js"></script>
+  <script src="js/grid.js"></script>
+  <script src="js/rails.js"></script>
+  <script src="js/trains.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>

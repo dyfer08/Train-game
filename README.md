@@ -1,28 +1,20 @@
-# Train Spotter
+# Train Grid
 
-Jeu web mobile où il faut mémoriser un train TGV puis le retrouver parmi plusieurs trains en mouvement, chacun sur son propre circuit.
+Jeu HTML5 Canvas au style Mini Motorways — grille, rivières, gares colorées et réseau de rails.
 
 ## Jouer
-
-Ouvrez `index.html` dans un navigateur, ou servez le dossier avec un serveur local :
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Puis ouvrez http://localhost:8080
-
-## Règles
-
-1. Mémorisez le train affiché (couleurs, forme, nombre de voitures)
-2. Trouvez-le sur le réseau ferroviaire (7 lignes distinctes, gares et aiguillages)
-3. Touchez le bon train pour marquer un point
-4. Une nouvelle manche commence avec un train différent
+Ouvrez http://localhost:8080
 
 ## Fichiers
 
-- `index.html` — structure de la page
-- `css/style.css` — styles mobile-first
-- `js/train.js` — génération et rendu des trains TGV
-- `js/tracks.js` — réseau ferroviaire interconnecté (hub, boucles, gares)
-- `js/game.js` — logique du jeu et animation
+- `index.html` — structure du jeu
+- `css/style.css` — interface minimaliste
+- `js/grid.js` — grille, terrain, eau, gares
+- `js/rails.js` — parcours de rails sur la grille
+- `js/trains.js` — trains animés
+- `js/game.js` — boucle de jeu Canvas
