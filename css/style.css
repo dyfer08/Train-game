@@ -156,7 +156,7 @@ body {
   flex: 1;
   max-height: calc(100% - 60px);
   border-radius: var(--radius);
-  background: #0c1222;
+  background: #1a2818;
   border: 2px solid #334155;
   cursor: pointer;
   touch-action: none;

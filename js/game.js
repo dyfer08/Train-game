@@ -5,7 +5,7 @@
   const MEMORIZE_DURATION = 3500;
   const WIN_DISPLAY_DURATION = 1200;
   const TRAIN_COUNT = 7;
-  const TRAIN_SCALE = 0.82;
+  const TRAIN_SCALE = 0.72;
 
   const phases = {
     memorize: document.getElementById('phase-memorize'),
@@ -28,6 +28,7 @@
   let roundConfigs = [];
   let trains = [];
   let tracks = [];
+  let network = null;
   let animFrameId = null;
   let gameState = 'idle';
   let dpr = 1;
@@ -38,13 +39,13 @@
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    tracks = TrackFactory.generateTracks(TRAIN_COUNT, rect.width, rect.height);
+    const generated = TrackFactory.generateTracks(TRAIN_COUNT, rect.width, rect.height);
+    tracks = generated.tracks;
+    network = generated.network;
   }
 
   function drawAllTracks() {
-    tracks.forEach((track) => {
-      TrackFactory.drawTrack(ctx, track, dpr, { width: 9, drawSleepers: true });
-    });
+    TrackFactory.drawNetwork(ctx, network, canvas.getBoundingClientRect().width, canvas.getBoundingClientRect().height, dpr);
   }
 
   /** Génère le train cible et les leurres pour la manche en cours */

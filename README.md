@@ -15,7 +15,7 @@ Puis ouvrez http://localhost:8080
 ## Règles
 
 1. Mémorisez le train affiché (couleurs, forme, nombre de voitures)
-2. Trouvez-le parmi les 7 circuits (double boucle, serpentin, trèfle, zigzag…)
+2. Trouvez-le sur le réseau ferroviaire (7 lignes distinctes, gares et aiguillages)
 3. Touchez le bon train pour marquer un point
 4. Une nouvelle manche commence avec un train différent
 
@@ -24,5 +24,5 @@ Puis ouvrez http://localhost:8080
 - `index.html` — structure de la page
 - `css/style.css` — styles mobile-first
 - `js/train.js` — génération et rendu des trains TGV
-- `js/tracks.js` — génération des circuits complexes (un par train)
+- `js/tracks.js` — réseau ferroviaire interconnecté (hub, boucles, gares)
 - `js/game.js` — logique du jeu et animation
